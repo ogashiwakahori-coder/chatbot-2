@@ -9,8 +9,11 @@ st.write(
     "APIキーは `.streamlit/secrets.toml` に保存してください。"
 )
 
-# シークレットからAPIキーを取得
-gemini_api_key = st.secrets.get("gemini", {}).get("api_key", None)
+# シークレットからAPIキーを取得（KeyErrorをキャッチ）
+try:
+    gemini_api_key = st.secrets["gemini"]["api_key"]
+except KeyError:
+    gemini_api_key = None
 
 pdf_file = st.file_uploader("PDFファイルをアップロードしてください", type=["pdf"])
 
@@ -25,7 +28,11 @@ if pdf_file:
         st.error(f"PDFの読み込みエラー: {e}")
 
 if not gemini_api_key:
-    st.error("Gemini API キーが設定されていません。 `.streamlit/secrets.toml` に `api_key` をセットしてください。", icon="🗝️")
+    st.error(
+        "Gemini APIキーが設定されていません。\n"
+        "`.streamlit/secrets.toml` に以下のように記載してください。\n\n"
+        "[gemini]\napi_key = \"YOUR_API_KEY\""
+    )
 else:
     genai.configure(api_key=gemini_api_key)
     model = genai.GenerativeModel(model_name="gemini-2.5-pro")
@@ -56,9 +63,4 @@ else:
 
         with st.chat_message("assistant"):
             st.markdown(answer)
-        st.session_state.messages.append({"role": "assistant", "content": answer})
-
-
-        with st.chat_message("assistant"):
-            st.markdown(answer)
-        st.session_state.messages.append({"role": "assistant", "content": answer})
+        st.session_state.messages.append({"role": "assistant", "content": answer})ontent": answer})
